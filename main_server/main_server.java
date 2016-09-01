@@ -81,8 +81,6 @@ public class main_server {
 				
 				System.out.println(web_data);
 				json_index = web_data.indexOf('{');
-				System.out.println(json_index);
-				System.out.println(web_data.codePointAt(json_index));
 
 				JSONObject json_web_data = new JSONObject(web_data.substring(json_index));
 				
@@ -276,19 +274,23 @@ public class main_server {
 		String form_func = "";
 		String form_send_to = "";
 		String key = "";
-        
+        String reg_form_name = "";
+		
         if (!(json_data.isNull("form")))
         {
-        	JSONArray formarray = json_data.getJSONArray("form");
+        	JSONObject formarray = json_data.getJSONObject("form");
         	JSONObject form;
         	JSONObject form_textbox;
-
-			for (int i = 0; i < formarray.length(); i++)
-			{
+			Iterator form_key = formarray.keys();
+			
+			while(form_key.hasNext())
+			{  
+				int i = 0;
+				reg_form_name = form_key.next().toString();
 		        System.out.println("");
 		        System.out.println("-----------------------form " + i + "-----------------------");
 		        System.out.println("");
-				form = formarray.getJSONObject(i);
+				form = formarray.getJSONObject(reg_form_name);
 
 				form_func = form.getString("func");
 				System.out.println(form_func);
@@ -311,6 +313,7 @@ public class main_server {
 		        }  
 		        System.out.println(" ");
 		        System.out.println("---------------------form-end!--------------------");
+		        i++;
 	        }
         }
         else	
