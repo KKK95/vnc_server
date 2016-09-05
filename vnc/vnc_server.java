@@ -13,6 +13,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;  
 
 import client.connected_thread;
+import server_config.Constants;
 import screen.ImageSender;
 import server_config.ServerListener;
 import vnc.vnc_server_thread;
@@ -53,14 +54,18 @@ public class vnc_server extends Thread{
 			private ServerSocket server;
 			private Socket client;
 
+			private RemoteDataServer vnc_thread;
+			
+			private boolean link_to_cloud = false;
 	//=======================================================================================
-	static List<vnc_server_thread> client_list = new ArrayList<vnc_server_thread>();
+//	static List<vnc_server_thread> client_list = new ArrayList<vnc_server_thread>();
 	
 	public vnc_server(int get_port, String get_ip)		//初次化vnc_server
 	{
 		PORT = get_port;
 		try {
 			ip = InetAddress.getByName(get_ip);
+			vnc_thread = new RemoteDataServer();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -75,8 +80,7 @@ public class vnc_server extends Thread{
 //		serverMessages.setText("Waiting for connection on " + ip);
 //==================================================================================
 //		Lock lock = new ReentrantLock();
-		
-		boolean connected = false;
+	
 		try(ServerSocket server = new ServerSocket(PORT)) 
 		{
 			System.out.println("vnc server running now...");
@@ -85,8 +89,14 @@ public class vnc_server extends Thread{
 		    	if (pid < 20)
 		    	{
 		    		client = server.accept();
-		    		RemoteDataServer vnc_thread = new RemoteDataServer(client);  //應加到list 來控制
-		        	vnc_thread.start();
+		    		vnc_thread.init(client);
+		    		new Thread(vnc_thread).start();
+		    		//再這加一個 vnc_thread.func, 每次有人連進來都要更新一下group_list
+		    		
+		 //============================================================================
+		 //   		RemoteDataServer vnc_thread = new RemoteDataServer(client);  
+		 //       	vnc_thread.start();
+		 //============================================================================
 		        	++pid;
 		        	System.out.println("IP " + "\n" + "Port " + PORT + 
 		        					   " is already in use. Use a different Port");

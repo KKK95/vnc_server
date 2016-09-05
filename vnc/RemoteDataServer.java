@@ -13,120 +13,131 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import java.util.Map;
+
 import screen.ImageSender;
 import server_config.Constants;
 import server_config.ServerListener;
 import vnc_mouse.AutoBot;
 
-public class RemoteDataServer extends Thread{
-	
+public class RemoteDataServer implements Runnable
+{
 		// local settings
+		private Object lock = new Object();
 		private Socket public_client;
-		private byte[] buf;
-		private BufferedReader public_in;
-		private PrintWriter public_out;
-		private int clientPort;
-		private InetAddress public_listenerAddress;
+		private boolean get;
+		private AutoBot bot;	//bot 是公用的, 反正一次只能有一個client 使用	
+		private InetAddress root_addr;		//最高權限是誰
+		Map<String, String> group_list;
 		
-		private boolean public_connected;
 		
-		private String message;
-		private AutoBot bot;
-		private ImageSender sender;
-
-		public RemoteDataServer(Socket socket){
-			buf = new byte[1000];
-			bot = new AutoBot();
-			public_client = socket;
-			public_connected = false;
-			try {
-				public_in = new BufferedReader(new InputStreamReader(public_client.getInputStream()));
-				public_out = new PrintWriter(new OutputStreamWriter(public_client.getOutputStream()));
-				public_connected = true;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		private int send_to_clientPort;		//client 之間私下傳訊息用
+		private InetAddress send_to_Address;
+		
+//========================================================================	
+		
+		public RemoteDataServer(){	get = true;	}
+		
+		public void init(Socket socket)		//建立新thread 前必需要呼叫此函數來初始化
+		{
+			while(!(get))System.out.println("有thread 正在初始化...");
+			synchronized(lock)  
+	        { 	public_client = socket;   get = false; }
 		}
-
-		public void run(){
+		
+public void run(){
+			//初始化所有參數
+//=====================================================================			
+			boolean connected = false;
+			BufferedReader in = null;
+			PrintWriter out = null;
+			int clientPort = 0;
+			InetAddress listenerAddress = null;
+			String message = "";
+			ImageSender sender = null;
+//=====================================================================	
 			
-			Socket public_client;
-			byte[] buf;
-			BufferedReader public_in;
-			PrintWriter public_out;
-			int clientPort;
-			InetAddress public_listenerAddress;
-			
-			boolean public_connected;
-			
-			while(connected){
+			//把共享的值變為局部值
+//=====================================================================
+			synchronized(lock)  
+	        { 
+				try 
+				{
+					in = new BufferedReader(new InputStreamReader(public_client.getInputStream()));
+					out = new PrintWriter(new OutputStreamWriter(public_client.getOutputStream()));
+					connected = true;
+					listenerAddress = public_client.getInetAddress();
+					clientPort = public_client.getPort();
+					
+					sender = new ImageSender(public_client);	//傳送螢幕的object
+					sender.setPort(clientPort);
+					get = true;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        }
+//=====================================================================			
+			while(connected)
+			{
 				// get message from sender
-				try{
-				
-					// store the packets address for sending images out
-					listenerAddress = client.getInetAddress();
-					clientPort = client.getPort();
+				try
+				{					
 					System.out.println("Client:" + listenerAddress);
 					// translate and use the message to automate the desktop
 					message = in.readLine();
-					
+
 					System.out.println(message);
 					
-					if (message.equals("Connectivity"))
-					{
-						System.out.println("Trying to Connect");
-						out.println(message); //echo the message back
-					}
-					
-					else if(message.equals("Connected"))
-					{
-						out.println(message); //echo the message back
-					}
-					
-					else if(message.equals("Close"))
-					{
-						System.out.println("Controller has Disconnected. Trying to reconnect."); //echo the message back
-					}
-					
-					else if(message.charAt(0) == Constants.REQUESTIMAGE)	//手機要求主機發送瑩幕
-					{
-						String[] arr = message.split("" + Constants.DELIMITER);
-						System.out.print("Request msg:" + arr[1]+" "+arr[2]+"\n");
-						sendImage(Integer.parseInt(arr[1]), Integer.parseInt(arr[2]));
-					}
-					
-					else
-					{
-						System.out.print("Touch:" + message);
-						bot.handleMessage(message);
-					}
+					process_msg(message, out, sender);		//可以的話把sender刪去					
 				}catch(Exception e){
 					System.out.println(e);
 					connected = false;
 				}
 			}
+}
+//======================================以上是run=========================================	
+		public void process_msg(String message, PrintWriter out, ImageSender sender)
+		{
+			if (message.equals("Connectivity"))//echo the message back
+			{
+				System.out.println("Trying to Connect");
+				out.println(message); 
+			}
+			
+			else if(message.equals("Connected"))//echo the message back
+			{	out.println(message);	}	
+			
+			else if(message.equals("Close"))	//echo the message back
+			{	System.out.println("Controller has Disconnected. Trying to reconnect.");	}	
+			
+			else if(message.charAt(0) == Constants.REQUESTIMAGE)
+			{	
+				String[] arr = message.split("" + Constants.DELIMITER);
+				System.out.print("Request msg:" + arr[1]+" "+arr[2]+"\n");
+				sendImage(Integer.parseInt(arr[1]), Integer.parseInt(arr[2]), sender);
+			}
+			
+			else		//使用keyboard
+			{
+				System.out.print("Touch:" + message);
+				bot.handleMessage(message);
+			}
 		}
 		
-		public void sendImage(int width, int height){
-			if(sender == null)
-			{	sender = new ImageSender(client);	}
-			
+		public void sendImage(int width, int height, ImageSender sender)
+		{
 			if(sender != null)
 			{
-				if(width == 0 && height == 0) {
-					System.out.println("Receive 0 rectangle");
-					return;
-				}
+				if(width == 0 && height == 0) 
+				{	System.out.println("Receive 0 rectangle");	return;	}
 				
 				float scale = 0.5f;
-				if(width > height) {
-					scale = ImageSender.SIZETHRESHOLD/width;
-				}else{
-					scale = ImageSender.SIZETHRESHOLD/height;
-				}
+				if(width > height) 
+				{	scale = ImageSender.SIZETHRESHOLD/width;	}
+				else
+				{	scale = ImageSender.SIZETHRESHOLD/height;	}
 				
-				sender.setPort(clientPort);
 				//sender.setImage(bot.getScreenCap((int)Math.round(width*scale), (int)Math.round(height * scale)) );
 			
 				sender.setImage(bot.getScreenCap(width, height));
@@ -134,6 +145,8 @@ public class RemoteDataServer extends Thread{
 				Thread send_image_thread = new Thread(sender);
 				send_image_thread.start();
 			}
+			else
+			{	System.out.println("sender 尚未初始化...");	return;	}
 		}
 
 		
