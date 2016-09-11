@@ -14,7 +14,10 @@ import org.json.JSONObject;
 
 public class http_request {
 	
-	private static Submit_Form submit_form; 
+	private static Submit_Form 		submit_form; 
+	private static Upload 			upload;
+	private static Download			download;
+	
 	private static int json_index = 0;
 	private static String basic_web_link = "";
 	static JSONObject json_web_data;
@@ -27,7 +30,9 @@ public class http_request {
 		else 
 			basic_web_link = link;
 		
+		upload = new Upload(basic_web_link);
 		submit_form = new Submit_Form(basic_web_link);
+		download = new Download(basic_web_link);
 	//	basic_web_link = "http://localhost:8080/meeting_cloud/device/";
 	}
 	
@@ -63,6 +68,20 @@ public class http_request {
 	public static String post_submit_form( HttpClient conn_cloud, Map<String, String> form_data) 
 	throws ClientProtocolException, IOException 
 	{	return submit_form.post(conn_cloud, form_data);	}
+	
+	public static void upload_file(HttpClient conn_cloud, String url, String file_path) 
+	throws Exception
+	{	
+		upload.upload_file(conn_cloud, url, file_path);
+		return;
+	}
+	
+	public static String download_file(HttpClient conn_cloud, String url, String download_file_path) 
+	throws Exception
+	{	
+		url = download.download_file(conn_cloud, url, download_file_path);
+		return url;
+	}
 }
 
 

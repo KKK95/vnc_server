@@ -63,15 +63,16 @@ public class main_server {
         this.map = new LinkedHashMap();  //new HashMap();    
 }  
 */
-	public static void main(String[] args) 
+	public static void main(String[] args) throws Exception 
 	{
 		url = "index.php";	//一開始預設是去登錄頁面
 		basic_web_link = "http://localhost:8080/meeting_cloud/device/";//雲端網頁放在這邊
-		Water_Crab browser = new Water_Crab(basic_web_link, local_server_ip);
-		
+		Water_Crab browser = new Water_Crab(basic_web_link, null, local_server_ip);
+	//	url = browser.download_file("back_end/download.php?download_path=user_upload_space/emaa&file_name=apple.txt", null);
 		try {
 			while (true)
 			{
+
 		        System.out.println("-----------------------------------new web!-----------------------------------");
 		        System.out.println("");
 		        
@@ -80,7 +81,7 @@ public class main_server {
 		        browser.link(url);								//並讓使用者查看網頁內容				|
 		        												//使用超連結或提交表單後, 返回超連結	|
 		        //===================================================================================			        
-	//	        browser.show_json_data();
+		        browser.show_json_data();
 		        browser.show_web_data();
 				
 		        commands = browser.get_commond();
@@ -88,7 +89,14 @@ public class main_server {
 				choose = browser.input();	//根據web 的界面做你想做的事, 其後會向cloud 發出請求, cloud 收到請求後會返會url
 				
 				if (choose > 0)
+				{
 					url = browser.chick_link( choose );
+					if (url.indexOf("download") >= 0)
+					{
+						url = browser.download_file(url, null);
+						System.out.println("download file");
+					}
+				}
 				else
 					url = browser.post_submit_form();
 				

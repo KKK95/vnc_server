@@ -12,27 +12,31 @@ import org.json.JSONObject;
 
 import HTTP_Request.http_request;
 import Browser.Get_Links;
-import Browser.Get_Forms;;
+import Browser.Get_Forms;
+
 
 public class Water_Crab 
 {
-	private static HttpClient conn_cloud 	= 		null; 
+	private static HttpClient 	conn_cloud 	= 		null; 
 	private static http_request request 	= 		null;
-	private static Get_Links links 			= 		null;
-	private static Get_Forms forms 			= 		null;
+	private static Get_Links 	links 		= 		null;
+	private static Get_Forms 	forms 		= 		null;
 	private static Get_Commands commands 	= 		null;
+	private static Get_Contents contents 	= 		null;
+
 	static JSONObject json_web_data;
 	private static Scanner scanner;
 	
 	private static String local_server_ip = "";
 	private static String basic_web_link = "";
+	private static String default_download_file_path = "";
 	
 	private static Map<String, String> link = new LinkedHashMap();
     private static Map<String, String> form_data = new LinkedHashMap();
     private static Map<String, String> fill_in_the_form_data = new LinkedHashMap();
     private static Map<String, String> command = new LinkedHashMap();
     
-	public Water_Crab(String link, String ip) 
+	public Water_Crab(String link, String download_path, String ip) 
 	{
 		conn_cloud = new DefaultHttpClient();			//初始化此function 的http 連接
 		
@@ -44,11 +48,17 @@ public class Water_Crab
 		
 		local_server_ip = ip;
 		
+		if (download_path == null)
+			default_download_file_path = "D:\\";
+		else 
+			default_download_file_path = download_path;
+		
 		scanner = new Scanner(System.in);
 		http_request request = new http_request(basic_web_link);
 		Get_Links links = new Get_Links(basic_web_link);
 		Get_Forms forms = new Get_Forms(basic_web_link);
 		Get_Forms commands = new Get_Forms(basic_web_link);
+		Get_Contents contents = new Get_Contents();
 	}
 	
 private static void update_web_data (JSONObject json)
@@ -91,6 +101,9 @@ public static void show_web_data()
 {
     //顯示網頁中所有連接
     links.show(json_web_data);
+    
+    //顯示網頁中的內容
+    contents.show(json_web_data);
        
     //顯示網頁中的所有表單內的所有欄位
     forms.show(json_web_data);
@@ -109,6 +122,7 @@ throws ClientProtocolException, IOException
     {
     	System.out.println("請選擇要提交表單還是按連接 (按0 後再選擇表單)"); 
     	choose = scanner.nextInt();
+    	scanner.nextLine();
     }
     else if (link.isEmpty())    {	choose = 0;    }		//沒有link
     else if (form_data.isEmpty())							//沒有form
@@ -122,14 +136,15 @@ throws ClientProtocolException, IOException
     { 	return choose;	    }
     else					//選表單
     {
-    	if ( form_data.get("2") != null )
+    	if ( form_data.get("1") != null )
     	{
     		System.out.println("請選擇要填寫的表單 : "); 
 	    	choose = scanner.nextInt();
 	    	scanner.nextLine();
     	}
     	else
-    		choose = 0;
+    	{	choose = 0;	}
+    	
     	System.out.println("請填寫表單 : "); 
     	
     	fill_in_the_form_data = fill_in_the_form(form_data, choose);	//選好表單後填寫表單
@@ -197,5 +212,20 @@ throws ClientProtocolException, IOException
 
 public static Map<String, String> get_commond()
 {	return command;	}
+
+public static void upload_file(String url, String file_path) 
+throws Exception
+{
+	request.upload_file(conn_cloud, url, file_path);
+	return;
+}
+
+public static String download_file(String url, String download_file_path)
+throws Exception
+{
+	if (download_file_path == null)
+		download_file_path = default_download_file_path;
+	return request.download_file(conn_cloud, url, download_file_path);
+}
 
 }

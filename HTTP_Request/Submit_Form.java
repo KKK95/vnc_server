@@ -44,13 +44,21 @@ public class Submit_Form {
 		    }   
 		    post.setEntity( new UrlEncodedFormEntity(post_form, "UTF-8"));
 
-		    HttpResponse res = conn_cloud.execute(post);
-		    BufferedReader br = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
+		    HttpResponse response = conn_cloud.execute(post);
 
 		    post.abort();//釋放post 請求?
-
-		    if (res.getStatusLine().getStatusCode() == 302) 		  	//302 表示轉跳
-		    {  	url = res.getLastHeader("Location").getValue();    }  
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+										response.getEntity().getContent(), "UTF-8"));
+	        String sResponse;
+	        String s = "";
+	
+	        while ((sResponse = reader.readLine()) != null) {
+	            s = s + sResponse + '\n';
+	        }
+	        
+	        System.out.println(s);
+		    if (response.getStatusLine().getStatusCode() == 302) 		  	//302 表示轉跳
+		    {  	url = response.getLastHeader("Location").getValue();    }  
 		    
 		    return url;
 		  }

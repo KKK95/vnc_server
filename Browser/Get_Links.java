@@ -51,7 +51,6 @@ public class Get_Links {
 						while(link_set_key.hasNext())
 						{
 							reg_link_name = link_set_key.next().toString();			//取得array 名字
-							System.out.println("name : " + reg_link_name);
 							link_set_array = link_set.getJSONArray(reg_link_name);	//透過名字 取得 array
 							reg_link = link_set_array.getString(j);					//從array 中取得元素
 							if (array_start != 0)
@@ -60,7 +59,7 @@ public class Get_Links {
 								map_links_ptr++ ;
 							}
 							if ( j == 0 )	
-							{	array_length = link_set_array.length();	}
+							{	array_length = link_set_array.length();	}			//得知object 裏面一條array 有多長
 							
 							array_start = 1;
 						}
@@ -89,10 +88,10 @@ public class Get_Links {
 	    System.out.println("-----------------------link-----------------------");
 	    if (!(json_data.isNull("link")))
 	    {
-	    	JSONObject linkArray = json_data.getJSONObject("link");
+	    	JSONObject linkObject = json_data.getJSONObject("link");
 	    	JSONObject link_set;
 	    	JSONArray link_set_array;
-			Iterator link_key = linkArray.keys();
+			Iterator link_key = linkObject.keys();
 			Iterator link_set_key;
 			
 			while(link_key.hasNext())
@@ -100,7 +99,7 @@ public class Get_Links {
 				reg_link_name = link_key.next().toString();
 				if ( (reg_link_name.indexOf("obj_", 0)) != -1)			//有obj, obj 裏含array
 				{
-					link_set = linkArray.getJSONObject(reg_link_name);
+					link_set = linkObject.getJSONObject(reg_link_name);
 					link_set_key = link_set.keys();
 					for (int j = 0, array_start = 0; j < array_length; j++, array_start = 0)
 					{		
@@ -128,8 +127,8 @@ public class Get_Links {
 				}
 				else
 				{
-					System.out.print("  " + map_links_ptr + "." + reg_link_name); 
-					reg_link = linkArray.getString(reg_link_name);
+					System.out.println("  " + map_links_ptr + "." + reg_link_name); 
+					reg_link = linkObject.getString(reg_link_name);
 					map_links_ptr++ ;
 				}
 				

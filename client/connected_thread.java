@@ -4,20 +4,20 @@ import java.io.*;
 import java.util.concurrent.locks.Lock;
 import java.net.Socket;
 
-import vnc_mouse.Mouse;
+//import vnc_mouse.Mouse;
 import vnc_mouse.AutoBot;
 
 public class connected_thread extends Thread 
 {
 //	private static AutoBot mouse;
-	private static Mouse mouse;
+//	private static Mouse mouse;
 	private static int pid = 0;
 	private Socket client;
 	Lock lock = null;  
 	public connected_thread(Socket socket, int i)
 	{
 	//	mouse = new AutoBot();
-		mouse = new Mouse();
+//		mouse = new Mouse();
 		this.client = socket;   
 //		this.lock = lock;  
 		pid = i;
@@ -46,7 +46,7 @@ public class connected_thread extends Thread
 					}
 					else if (line != null && line.trim().length() != 0)
 					{
-						mouse.mouse_control(client, line);
+//						mouse.mouse_control(client, line);
 			//			AutoBot.handleMessage(line);
 					}
 			}

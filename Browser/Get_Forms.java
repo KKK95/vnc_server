@@ -35,10 +35,10 @@ public class Get_Forms
 	    	JSONObject form;
 	    	JSONObject form_textbox;
 			Iterator form_key = formarray.keys();
-			
+			int i = 0;
 			while(form_key.hasNext())
 			{  
-				int i = 0;
+				
 				reg_form_name = form_key.next().toString();
 				form = formarray.getJSONObject(reg_form_name);
 	
@@ -75,10 +75,10 @@ public class Get_Forms
 	    	JSONObject form;
 	    	JSONObject form_textbox;
 			Iterator form_key = formarray.keys();
-			
+			int i = 0;
 			while(form_key.hasNext())
 			{  
-				int i = 0;
+				
 				reg_form_name = form_key.next().toString();
 		        System.out.println("");
 		        System.out.println("-----------------------form " + i + "-----------------------");
