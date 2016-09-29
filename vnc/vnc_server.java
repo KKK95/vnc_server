@@ -12,25 +12,14 @@ import java.net.UnknownHostException;
 import java.util.concurrent.locks.Lock;  
 import java.util.concurrent.locks.ReentrantLock;  
 
-import client.connected_thread;
-import server_config.Constants;
-import screen.ImageSender;
-import server_config.ServerListener;
-import vnc.vnc_server_thread;
 import vnc.RemoteDataServer;
 
 //------------------------------http----------------------------------
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair; 
+
+import Browser.Water_Crab;
 
 import org.json.JSONObject;
+import org.apache.http.client.ClientProtocolException;
 import org.json.JSONArray;
 
 public class vnc_server extends Thread{
@@ -44,8 +33,6 @@ public class vnc_server extends Thread{
 	
 	// local settings
 			private int PORT;
-			private InetAddress ipAddress;
-			private InetAddress ip;
 			
 			//remote settings
 			private int clientPort;
@@ -55,31 +42,23 @@ public class vnc_server extends Thread{
 			private Socket client;
 
 			private RemoteDataServer vnc_thread;
+			private Remote_controler remote_controler;
 			
-			private boolean link_to_cloud = false;
+			private Water_Crab browser = null;
+			private String url = null;
 	//=======================================================================================
-//	static List<vnc_server_thread> client_list = new ArrayList<vnc_server_thread>();
 	
-	public vnc_server(int get_port, String get_ip)		//初次化vnc_server
+	public vnc_server(Water_Crab get_browser, int get_port, String get_ip)		//初次化vnc_server
 	{
 		PORT = get_port;
-		try {
-			ip = InetAddress.getByName(get_ip);
 			vnc_thread = new RemoteDataServer();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			remote_controler = new Remote_controler();
+			browser = get_browser;
+			url = browser.get_now_url();
 	}
 	
 	public void run() 
 	{
-		
-//========================監聽在remotedata , 要拆了它放在這邊========================
-		
-//		serverMessages.setText("Waiting for connection on " + ip);
-//==================================================================================
-//		Lock lock = new ReentrantLock();
 	
 		try(ServerSocket server = new ServerSocket(PORT)) 
 		{
@@ -89,14 +68,18 @@ public class vnc_server extends Thread{
 		    	if (pid < 20)
 		    	{
 		    		client = server.accept();
+		    		if (browser != null)		//更新網頁
+		    		{
+		    			using_browser();
+		    			//利用client ip 來查 client name
+		    		}
+		    		//remote_controler.member_join(client, client_name, client_ip);
 		    		vnc_thread.init(client);
 		    		new Thread(vnc_thread).start();
 		    		//再這加一個 vnc_thread.func, 每次有人連進來都要更新一下group_list
 		    		
-		 //============================================================================
-		 //   		RemoteDataServer vnc_thread = new RemoteDataServer(client);  
-		 //       	vnc_thread.start();
-		 //============================================================================
+		    		
+		    		
 		        	++pid;
 		        	System.out.println("IP " + "\n" + "Port " + PORT + 
 		        					   " is already in use. Use a different Port");
@@ -109,39 +92,42 @@ public class vnc_server extends Thread{
 		catch(Exception e){
 			System.out.println("Unable to connect");
 		}
+	}
+	
+	private void using_browser() throws ClientProtocolException, IOException
+	{
 		
+		int choose = 0;
+		System.out.println("-----------------------------------new web!-----------------------------------");
+        System.out.println("");
+        
+		//===================================================================================	
+														//網頁資料都送進來處理, 把資料過濾後	|
+        browser.link(url);								//並讓使用者查看網頁內容				|
+        												//使用超連結或提交表單後, 返回超連結	|
+        //===================================================================================			        
+//	        browser.show_json_data();
+        browser.show_web_data();
 		
-		
-		
+/*			choose = browser.input();	//根據web 的界面做你想做的事, 其後會向cloud 發出請求, cloud 收到請求後會返會url
+			
+			if (choose > 0)
+			{
+				url = browser.chick_link( choose );
+				if (url.indexOf("download") >= 0)
+				{
+					url = browser.download_file(url, null);
+					System.out.println("download file");
+				}
 
-//		ServerSocket server = new ServerSocket(SERVER_PORT)
-	 /*   try
-	    {
-	  //  	System.out.println(InetAddress.getLocalHost().toString());
-			 //Create a server socket on port 8998
-			//read input from client while it is connected
-		    for (int pid=0; true; )
-		    {
-		    	if (pid < 20)
-		    	{
-			        try{
-				        	Socket client = server.accept();
-				        	vnc_server_thread vnc_thread = new vnc_server_thread(client, pid);  
-				        	vnc_thread.start();  
-				            client_list.add(vnc_thread);
-							pid++;	
-			        		
-						} catch (IOException e) {
-							System.out.println(e);
-						} catch (RuntimeException e) {
-							System.out.println(e);
-						}
-		    	}
-		     } 
-		}catch (IOException e) {
-			System.out.println("Error in opening Socket");
-			System.exit(-1);
-		}	*/
+			}
+			else
+			{	url = browser.post_submit_form();	}
+*/		
+		System.out.println("");
+        System.out.println("-----------------------------------end web!-----------------------------------");
+        System.out.println("");
+		return;
 	}
 }
 

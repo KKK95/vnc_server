@@ -1,6 +1,7 @@
 package Browser;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -29,12 +30,16 @@ public class Water_Crab
 	
 	private static String local_server_ip = "";
 	private static String basic_web_link = "";
+	private static String now_web_url = "";
 	private static String default_download_file_path = "";
 	
 	private static Map<String, String> link = new LinkedHashMap();
     private static Map<String, String> form_data = new LinkedHashMap();
     private static Map<String, String> fill_in_the_form_data = new LinkedHashMap();
     private static Map<String, String> command = new LinkedHashMap();
+    private static Map<String, String> state = new HashMap();
+    
+    private static boolean vnc_server_running = false;
     
 	public Water_Crab(String link, String download_path, String ip) 
 	{
@@ -167,6 +172,7 @@ public static String chick_link(int link_num)
         }
         else	i++;
     }
+	now_web_url = new_url;
 	return new_url;
 }
 
@@ -227,5 +233,20 @@ throws Exception
 		download_file_path = default_download_file_path;
 	return request.download_file(conn_cloud, url, download_file_path);
 }
+
+public static void set_state (boolean vnc_server_state)
+{
+	vnc_server_running = vnc_server_state;
+	return;
+}
+
+public static boolean get_state ()
+{	return vnc_server_running;	}
+
+public static String get_now_url()
+{	return now_web_url;		}
+
+public static Map<String, String> get_member_list(JSONObject json_data, String member_name, String ip)
+{	return contents.get_member_list(json_data, member_name, ip);	}
 
 }

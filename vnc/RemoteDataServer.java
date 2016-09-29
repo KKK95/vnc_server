@@ -25,7 +25,7 @@ public class RemoteDataServer implements Runnable
 		// local settings
 		private Object lock = new Object();
 		private Socket public_client;
-		private boolean get;
+		private boolean init_thread;
 		private AutoBot bot;	//bot 是公用的, 反正一次只能有一個client 使用	
 		private InetAddress root_addr;		//最高權限是誰
 		Map<String, String> group_list;
@@ -36,13 +36,13 @@ public class RemoteDataServer implements Runnable
 		
 //========================================================================	
 		
-		public RemoteDataServer(){	get = true;	}
+		public RemoteDataServer(){	init_thread = false;	}
 		
 		public void init(Socket socket)		//建立新thread 前必需要呼叫此函數來初始化
 		{
-			while(!(get))System.out.println("有thread 正在初始化...");
+			while(init_thread)System.out.println("有thread 正在初始化...");
 			synchronized(lock)  
-	        { 	public_client = socket;   get = false; }
+	        { 	public_client = socket;   init_thread = true; }
 		}
 		
 public void run(){
@@ -71,7 +71,7 @@ public void run(){
 					
 					sender = new ImageSender(public_client);	//傳送螢幕的object
 					sender.setPort(clientPort);
-					get = true;
+					init_thread = false;
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
